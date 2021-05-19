@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:order-details-api="http://www.mulesoft.org/schema/mule/order-details-api"
+	xmlns:payments-api="http://www.mulesoft.org/schema/mule/payments-api" xmlns:products-api="http://www.mulesoft.org/schema/mule/products-api" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/products-api http://www.mulesoft.org/schema/mule/products-api/current/mule-products-api.xsd
+http://www.mulesoft.org/schema/mule/payments-api http://www.mulesoft.org/schema/mule/payments-api/current/mule-payments-api.xsd
+http://www.mulesoft.org/schema/mule/order-details-api http://www.mulesoft.org/schema/mule/order-details-api/current/mule-order-details-api.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b1367a65-ea14-4642-99c8-555b81a4a32a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<products-api:config name="Products_API_Config" doc:name="Products API Config" doc:id="296da4b7-5211-453a-8f7e-affa9a6b6b5c" property_host="product-project-shivam.us-e2.cloudhub.io" property_port="80" property_protocol="HTTP" property_basePath="/api" />
+	<payments-api:config name="Payments_API_Config" doc:name="Payments API Config" doc:id="71664bdc-f9ba-4b02-8193-45f0212bb0ea" property_host="payment-project-shivam.us-e2.cloudhub.io" property_port="80" property_protocol="HTTP" property_basePath="/api" />
+	<order-details-api:config name="OrderDetails_API_Config" doc:name="OrderDetails API Config" doc:id="99b16305-6ea7-47cd-a693-051ea480c196" property_host="orderdetailsapi-project-shrutihp.us-e2.cloudhub.io" property_port="80" property_protocol="HTTP" property_basePath="/api" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="cb1ac32f-0595-4f86-94bc-0c96f729f3dc" >
+		<db:my-sql-connection host="34.69.36.42" port="3306" user="root" password="SHIvam665@@" database="Complain" />
+	</db:config>
+	<flow name="GetAllDetailsFlow" doc:id="675e7bb5-ae97-4587-95c2-aaf14ccbca97">
+		<http:listener doc:name="Listener" doc:id="d5c4cfd3-179a-4837-8f6b-b2752de1ce51" config-ref="HTTP_Listener_config" path="/Products" allowedMethods="GET"/>
+		<choice doc:name="Choice" doc:id="812ebdd9-58b9-4748-9af3-1ba726f3b66c" >
+			<when expression='#[attributes.queryParams.Products=="Products"]'>
+				<products-api:get-all-prducts doc:name="Get All Prducts" doc:id="1b9c743b-e503-44fa-a5fc-270df259697c" config-ref="Products_API_Config"/>
+				<ee:transform doc:name="Transform Message" doc:id="bf2b3d02-c1e4-43e1-852f-882e6b855f3e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+	payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='#[attributes.queryParams.Products=="Payments"]'>
+				<payments-api:get-all-payments-details doc:name="Get All Payments details" doc:id="eed7e8dc-71a4-45b5-bc74-9617ac978231" config-ref="Payments_API_Config"/>
+				<ee:transform doc:name="Transform Message" doc:id="f5d4240e-1fae-4bf5-bd62-5704ce5d336e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[attributes.queryParams.Products=="OrderDetails"]'>
+				<order-details-api:get-all-orders doc:name="Get All Orders" doc:id="001f48c5-2e55-4ea1-a227-7307cc16164a" config-ref="OrderDetails_API_Config"/>
+				<ee:transform doc:name="Transform Message" doc:id="1367b4a4-0d29-4249-a3e3-f077e3567c79" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<order-details-api:get-all-orders doc:name="Get All Orders" doc:id="eb5fcd12-e792-48f8-9ae0-af7e174fe252" config-ref="OrderDetails_API_Config" />
+				<ee:transform doc:name="Transform Message" doc:id="aefcf658-b4f0-430e-a027-9b918caa9647" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "You are trying to fetch wrong data"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="GetOrderDetailByIDFlow" doc:id="b5c809dc-c752-46b7-bb21-6c2612d1a7ec" >
+		<http:listener doc:name="Listener" doc:id="9c431c6b-408f-48f8-87ce-54578f467f98" config-ref="HTTP_Listener_config" path="/OrderDetails/{orderNumber}"/>
+		<set-variable value="#[attributes.uriParams.orderNumber]" doc:name="Number" doc:id="5a9c22cb-6c1f-459d-ba6b-041bfc2bd6b0" variableName="Number"/>
+		<order-details-api:get-order-details-for-a-particular-id doc:name="Get Order details for a particular ID" doc:id="fc2c8b0d-284c-4dc0-a96e-810e86f6aaa2" config-ref="OrderDetails_API_Config" order-number="#[vars.Number]"/>
+		<ee:transform doc:name="Transform Message" doc:id="005615d5-90d7-4404-aef8-a4a3accaee59" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="GetProductByIdFlow" doc:id="f3e6114c-8f89-4724-b9d8-9068e49bebf7" >
+		<http:listener doc:name="Listener" doc:id="896ed355-0ed5-448c-8b9f-6090a28000bd" config-ref="HTTP_Listener_config" path="/Products/{productCode}"/>
+		<set-variable value="#[attributes.uriParams.productCode]" doc:name="code" doc:id="13ff046a-16f9-4979-bc50-179444fe93d0" variableName="code"/>
+		<products-api:get-product-details-for-a-particular-id doc:name="Get Product details for a particular ID" doc:id="88775a52-dd74-48d8-8249-4f1eb498e80d" config-ref="Products_API_Config" product-code="#[vars.code]"/>
+		<ee:transform doc:name="Transform Message" doc:id="36327533-afc7-40ba-85d6-37ec6b6afa3f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="GetPaymentByIdFlow" doc:id="2ec9d78f-5be2-465c-9570-8974b6ba2aca" >
+		<http:listener doc:name="Listener" doc:id="c13e3e9f-e0af-4508-a91d-13369365fb74" config-ref="HTTP_Listener_config" path="/Payments/{customerNumber}"/>
+		<set-variable value="#[attributes.uriParams.customerNumber]" doc:name="Number" doc:id="7c5f9d55-62b4-4a8c-974f-602d95629320" variableName="Number"/>
+		<payments-api:get-payment-details-for-a-particular-id doc:name="Get Payment details for a particular ID" doc:id="b94e875b-cd0e-4296-bd82-120f067063d2" config-ref="Payments_API_Config" customer-number="#[vars.Number]"/>
+		<ee:transform doc:name="Transform Message" doc:id="c08de2c4-eef7-4ec8-a39a-693933f3aafe" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="DeleteProductByIdFlow" doc:id="2ddb2139-7939-4045-b45a-00528c13460f" >
+		<http:listener doc:name="Listener" doc:id="d0fd1d99-b1de-4b86-8d85-950d769d9972" config-ref="HTTP_Listener_config" path="/DeleteProducts/{productCode}"/>
+		<set-variable value="#[attributes.uriParams.productCode]" doc:name="deleteid" doc:id="deaf364b-a80e-49a0-b307-88134b0972df" variableName="deleteid"/>
+		<products-api:delete-product-by-id doc:name="Delete Product by ID" doc:id="e5b605f4-8bc6-4631-b4d0-89ef43c1dec2" config-ref="Products_API_Config" product-code="#[vars.deleteid]"/>
+		<ee:transform doc:name="Transform Message" doc:id="82792e39-daea-4908-923a-8ad79e89ccf2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="PostPaymentFlow" doc:id="41d935eb-9622-48e9-af57-c8941ec086aa" >
+		<http:listener doc:name="Listener" doc:id="2e0c972c-5a1a-4d0a-9aa8-e7aadff88de5" config-ref="HTTP_Listener_config" path="/AddPayments"/>
+		<payments-api:post-payment doc:name="Post Payment" doc:id="f427a514-cf91-4d0f-9b9a-950d9ed3d6a8" config-ref="Payments_API_Config">
+		</payments-api:post-payment>
+		<ee:transform doc:name="Transform Message" doc:id="a5545f74-3ad0-4d34-a044-369dcc42d818" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="PostOrderDetailFlow" doc:id="15f6364e-6194-4a8a-bfb6-937c273fe401" >
+		<http:listener doc:name="Listener" doc:id="39f111b7-6f8a-4f03-9081-be6168f9c785" config-ref="HTTP_Listener_config" path="/AddOrderDetails"/>
+		<order-details-api:post-order doc:name="Post Order" doc:id="c8c6f1e0-68d5-40c1-ab50-f3f5c8bc5ef5" config-ref="OrderDetails_API_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="ab3e772a-d1f4-43ae-ac1d-8996d57486c6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="PostProductFlow" doc:id="2d648ecf-eeb6-495f-bfbd-3856edcc8a7d" >
+		<http:listener doc:name="Listener" doc:id="e30d4b2d-d56a-4f40-bbf1-88091727b144" config-ref="HTTP_Listener_config" path="/AddProducts"/>
+		<products-api:post-product doc:name="Post Product" doc:id="3778aa44-de52-47e2-850a-500c5a04adfd" config-ref="Products_API_Config">
+		</products-api:post-product>
+		<ee:transform doc:name="Transform Message" doc:id="fc78a6fa-47b4-4b28-845d-38c92e32ce1a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="ModifyProductByIdFlow" doc:id="a3ae55ee-6fa0-497a-b83a-928a68104758" >
+		<http:listener doc:name="Listener" doc:id="2208b4b4-dde3-44e6-8efc-9a1a70fd0ee5" config-ref="HTTP_Listener_config" path="/ModifyProducts/{productCode}"/>
+		<set-variable value="#[attributes.uriParams.productCode]" doc:name="patchproduct" doc:id="0bf6ec21-cc70-4128-b797-c0a6b5c50e34" variableName="patchproduct"/>
+		<products-api:patch-product-by-id doc:name="Patch Product by ID" doc:id="2bbf7010-2873-4528-82b6-27d1263e1e18" config-ref="Products_API_Config" product-code="#[vars.patchproduct]"/>
+		<ee:transform doc:name="Transform Message" doc:id="13780409-90b8-497f-bdd0-568a0134c4da" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

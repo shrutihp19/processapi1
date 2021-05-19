@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:payments-api="http://www.mulesoft.org/schema/mule/payments-api" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/payments-api http://www.mulesoft.org/schema/mule/payments-api/current/mule-payments-api.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<munit:config name="process-api1-test-suite.xml" />
+	<munit:test name="process-api1-test-suite-PostPaymentFlowTest" doc:id="6c4f909d-703e-40a4-8487-7710f44588ed" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="a606d7f9-55da-44cf-8d35-eae7de2c5188" processor="payments-api:post-payment">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Post Payment" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="f427a514-cf91-4d0f-9b9a-950d9ed3d6a8" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Payments_API_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="6d9c2665-38fb-42c8-bfbd-f6d95d41179b" >
+				<munit:payload value='{&#10;  "checkNumber": "NANI56145",&#10;    "paymentDate": "2021-10-11T01:13:00",&#10;    "amount": 1590.0&#10;  }' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to PostPaymentFlow" doc:id="efb48912-abef-46e4-93de-a986c5078e0d" name="PostPaymentFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="a1a7105c-157b-4b94-a2b4-cb1f59d0b990" is="#[MunitTools::notNullValue()]" message="error" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-GetAllDetailsFlowTest" doc:id="b4b25b3b-bbf6-4ff9-8314-9e3c050c508e" description="Test">
+		<munit:execution >
+			<munit:set-null-payload doc:name="Set null payload" doc:id="5d871f1e-d077-47e8-a136-44c68df34515" />
+			<flow-ref doc:name="Flow-ref to GetAllDetailsFlow" doc:id="290931b5-3d8b-4b5d-aa66-67f250aeac6f" name="GetAllDetailsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="30c60f3c-476a-4990-9dc8-c3d2c12c57e8" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-GetProductByIdFlowTest" doc:id="4ec09129-447f-4249-b0c2-250ec7638e96" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="fe73c0df-175c-4a25-a324-d8b483576fe9" processor="products-api:get-product-details-for-a-particular-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Get Product details for a particular ID" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="88775a52-dd74-48d8-8249-4f1eb498e80d" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Products_API_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="#[vars.code]" attributeName="product-code" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="88b7a704-2466-41c9-9abf-06aae32f73e6" >
+				<munit:payload value='"productCode": "P1001"' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to GetProductByIdFlow" doc:id="593de2a3-b91a-4f48-bc83-d0e82da2846a" name="GetProductByIdFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="7d795bba-19f0-449f-bcfd-6fc00515cd41" message="error in get product by id flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-GetPaymentByIdFlowTest" doc:id="0af682c6-2f2e-4ef9-8a6c-d16f5196b4c7" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="193074b9-0cdd-433b-b1d2-c2c90f15abcd" processor="payments-api:get-payment-details-for-a-particular-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Get Payment details for a particular ID" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="b94e875b-cd0e-4296-bd82-120f067063d2" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Payments_API_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="#[vars.Number]" attributeName="customer-number" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="113c3c71-52f3-4166-a487-baa4c02f6d77" >
+				<munit:payload value='"customerNumber": "10001"' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to GetPaymentByIdFlow" doc:id="69c87916-cb65-4d75-8d25-935556c186c8" name="GetPaymentByIdFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="0854df31-1d15-4ee7-9c0f-060a34f00a6d" message="error in get payments by id flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-DeleteProductByIdFlowTest" doc:id="f102d132-f445-4f35-8863-0547146ac5e1" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="4ca5bec7-afb3-4b8e-989d-8bea2f2132a3" processor="products-api:delete-product-by-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Delete Product by ID" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="e5b605f4-8bc6-4631-b4d0-89ef43c1dec2" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Products_API_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="#[vars.deleteid]" attributeName="product-code" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="d457cb10-bd34-4a05-a6a5-4738d153bc08" >
+				<munit:payload value='"productCode": "P1012"' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to DeleteProductByIdFlow" doc:id="84c9a57c-8420-456f-a7c3-12db8c3a0e24" name="DeleteProductByIdFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="b8a2c2c4-d49f-4f72-bd6c-624c771b08c2" message="error in delete product by id flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-PostProductFlowTest" doc:id="e72d0be6-aa0b-4594-96d0-0d0b148caf88" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="718409d4-661a-4e5b-ad02-5b26322a5b62" processor="products-api:post-product">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Post Product" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="3778aa44-de52-47e2-850a-500c5a04adfd" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Products_API_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="0e11d133-7132-4c27-8e52-76c9ead28c63" >
+				<munit:payload value='{&#10;       "productName": "Cadbury Silk",&#10;        "productVendor": "Cadbury",&#10;        "productDescription": "Choclate",&#10;        "quantityInStock": 500,&#10;        "buyPrice": 150.0&#10;}' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to PostProductFlow" doc:id="78539e75-ae35-4ced-8266-1f69b1fd3723" name="PostProductFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="e843d492-74e6-4ac4-be35-79b768299159" message="error in post product flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-ModifyProductByIdFlowTest" doc:id="d17e80f3-73c5-4a63-b63f-88186117058e" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="10244984-f375-4500-a06f-841cd1a5afd2" processor="products-api:patch-product-by-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Patch Product by ID" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="2bbf7010-2873-4528-82b6-27d1263e1e18" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Products_API_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="#[vars.patchproduct]" attributeName="product-code" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="9b4297f0-1217-41e9-9b7f-b0ba90cd5f9e" >
+				<munit:payload value='{&#10;      &#10;        "quantityInStock": 500&#10;        &#10;}' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to ModifyProductByIdFlow" doc:id="51c384d5-8d64-4d0a-9115-944fe68bd5a8" name="ModifyProductByIdFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="88e1832f-88cd-43d3-9606-021078ec890a" message="error in modify product by id flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-PostOrderDetailFlowTest" doc:id="57a563bd-c443-4077-b687-567017406e5c" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="55e91059-72e1-41fb-af95-e5397bfd7456" processor="order-details-api:post-order">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Post Order" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="c8c6f1e0-68d5-40c1-ab50-f3f5c8bc5ef5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="OrderDetails_API_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="1c0c5d81-70a8-453e-bab1-64b824de441f" >
+				<munit:payload value='{&#10;&#10;	"productCode": "P101",&#10;	"quantityOrdered": 3,&#10;	"priceEach": 400.00&#10;}' mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to PostOrderDetailFlow" doc:id="00625944-eb6b-4814-828f-75352062f9f3" name="PostOrderDetailFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="ce995066-df22-469a-aa98-022aa6091234" message="error in post order details flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="process-api1-test-suite-GetOrderDetailByIDFlowTest" doc:id="49f76fc1-9da9-481e-abe4-6f9846ec3374" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="e852d751-2be6-49cc-afd7-7eaf5f87bb0e" processor="order-details-api:get-order-details-for-a-particular-id">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Get Order details for a particular ID" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="fc2c8b0d-284c-4dc0-a96e-810e86f6aaa2" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="OrderDetails_API_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="#[vars.Number]" attributeName="order-number" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="c91d15e1-10e2-4dec-995d-d49fdcf1ffa1" >
+				<munit:payload value='"orderNumber": "1"' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to GetOrderDetailByIDFlow" doc:id="372e5495-34f0-47db-b191-ad3b0c3568b9" name="GetOrderDetailByIDFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="4c0bc66c-9bb2-4fdb-9de6-0e98011477bd" message="error in get orderDetails by id flow" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
